@@ -9,8 +9,9 @@ To use Chub Stresser, follow these steps:
 1. Clone the repository or download the `chub.py` script.
 2. Open a terminal or command prompt.
 3. Navigate to the directory where `chub.py` is located.
-4. Run the script using Python 3: `python3 chub.py`.
-5. Follow the on-screen instructions to specify the target and configure the stress test parameters.
+4. Install the required dependencies using the following command: `pip install -r requirements.txt`.
+5. Run the script using Python 3: `python3 chub.py`.
+6. Follow the on-screen instructions to specify the target and configure the stress test parameters.
 
 ## Features
 
