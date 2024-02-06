@@ -72,8 +72,7 @@ if __name__ == "__main__":
         os.system('cls')   
         chub_ascii()
         
-        num_timeout = 5
-        target_port =  80
+        target_port = 0 # just initialize
         
         if user_option == 0:   
             target_host = input("Enter target URL (http://example.com): ")
