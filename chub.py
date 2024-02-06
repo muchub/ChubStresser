@@ -46,8 +46,8 @@ def chub_request(host, headers, thread_id, target_port):
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect((host, target_port))
             client_socket.sendall(f'GET / HTTP/1.1\r\nHost: {host}\r\n'.encode())
-            print_up(num_timeout)
-            time.sleep(100)
+            print_up(num_threads)
+            time.sleep(num_timeout)
         except Exception as e:
             print_down(thread_id)
     
