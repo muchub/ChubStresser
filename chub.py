@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Chub Stresser Script v1.0
-# Author: Muchub
+# Author: Muchub (https://github.com/muchub/)
 # Purpose: DoS (Denial of Service) tool for testing servers
 # Usage: python3 chub.py
 # Note: Use responsibly and only for legal purposes
@@ -18,8 +18,8 @@ from colorama import Fore, Style
 def chub_ascii():
     print(Fore.GREEN + """
              /\_/\\  """ + Fore.RED + "Chub" + Fore.RED + " Stresser !" + Fore.GREEN + """
-            ( o.o ) """ + Fore.BLUE + """Use at your own risk :v""" + Fore.GREEN + """
-             > ^ <
+            ( o.o ) """ + Fore.BLUE + "Use at your own risk :v" + Fore.GREEN + """
+             > ^ < """ + Fore.BLUE + " Author - " + Fore.GREEN + "Muchub" + Fore.GREEN + """
         """ + Style.RESET_ALL)
     
 def print_up(thread_id):
