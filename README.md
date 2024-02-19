@@ -28,6 +28,6 @@ Chub Stresser is intended for educational and testing purposes only. Unauthorize
 
 - **Muchub** - [GitHub](https://github.com/muchub)
 
-## License
+## No License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is not licensed and is provided as-is, with no warranties or guarantees.
