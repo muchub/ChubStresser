@@ -200,8 +200,8 @@ if __name__ == "__main__":
         chub_ascii()
 
         target_port = 0  # just initialize
-        word = ""
-        word_num = 0
+        message = ""
+        message_num = 0
 
         if user_option == 0:
             target_host = input("Enter target URL (http://example.com): ")
